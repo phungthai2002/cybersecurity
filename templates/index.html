@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Secure Password Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="left-panel">
+            <a href="/" style="color: #51d400;text-decoration: none;font-size: 20px; pointer-events: none;">Simulate:</a>
+            <button onclick="setMode('leak')" id="leakBtn" class="active">LEAK</button>
+            <button onclick="setMode('attack')" id="attackBtn">ATTACK</button>
+            <button onclick="setMode('defense')" id="defenseBtn">DEFENSE</button>
+
+            <!-- LEAK -->
+            <div id="leakForm">
+                <h2>SIGN UP</h2>
+                <div id="messageBox" class="message-box"></div>
+                <input id="username" placeholder="Username">
+                <input id="password" placeholder="Password">
+                <button onclick="addUser()">Add</button>
+            </div>
+            <div id="action">
+                <h2>Actions</h2>
+            </div>
+            <div id="leakOptions" style="display:block;">
+                <button id="leakActionBtn" onclick="leakPasswords()">Leak</button>
+            </div>
+
+            <!-- ATTACK -->
+            <div id="attackOptions" style="display:none;">
+                <button id="dictionaryActionBtn" onclick="dictionaryAttack()">DICTIONARY</button>
+                <button id="rainbowActionBtn" onclick="rainbowAttack()">RAINBOW</button>
+            </div>
+
+            <!-- DEFENSE -->
+            <div id="defenseOptions" style="display:none;">
+                <button id="accountLockBtn" onclick="accountLock()">Account Lock</button>
+                <button id="slowHashBtn" onclick="slowHash()">Slow Hash</button>
+            </div>
+
+        </div>
+
+        <div class="right-panel">
+            <h2 style="margin-left: 10px;">OUTPUT</h2>
+            <div id="loading" class="loading" style="display:none;">
+                <span>Loading</span><span class="dots"></span>
+            </div>
+            <div id="output" class="output-box"></div>
+            <h2 style="margin-left: 10px;">List Sample</h2>
+            <div id="listSample" class="output-box"></div>
+        </div>
+
+    </div>
+
+    <script>
+        var leakOptions = document.getElementById("leakOptions");
+        var attackOptions = document.getElementById("attackOptions");
+        var defenseOptions = document.getElementById("defenseOptions");
+
+        function updateListSample(title, data) {
+            const box = document.getElementById("listSample");
+
+            let output = `${title}\n\n`;
+
+            data.forEach((item, index) => {
+                output += `${index + 1}. ${item}\n`;
+            });
+
+            box.innerText = output;
+        }
+
+        function showMessage(msg) {
+            const box = document.getElementById("messageBox");
+            box.innerText = msg;
+            box.classList.add("show");
+
+            setTimeout(() => {
+                box.classList.remove("show");
+            }, 2000);
+        }
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+        }
+
+        // function typeWriter(text) {
+        //     let i = 0;
+        //     const speed = 10;
+        //     outputEl.innerText = "";
+
+        //     function typing() {
+        //         if (i < text.length) {
+        //             outputEl.innerText += text.charAt(i);
+        //             i++;
+        //             setTimeout(typing, speed);
+        //         }
+        //     }
+        //     typing();
+
+        // }
+
+        function typeWriter(text, speed = 10) {
+            const output = document.getElementById("output");
+            output.innerText = "";
+
+            let i = 0;
+
+            function typing() {
+                if (i < text.length) {
+                    output.innerText += text.charAt(i);
+                    output.scrollTop = output.scrollHeight;
+                    i++;
+                    setTimeout(typing, speed);
+                }
+            }
+
+            typing();
+        }
+        function setMode(mode) {
+            document.getElementById("leakBtn").classList.remove("active");
+            document.getElementById("attackBtn").classList.remove("active");
+            document.getElementById("defenseBtn").classList.remove("active");
+
+            if (mode === "leak") {
+                leakBtn.classList.add("active");
+                attackOptions.style.display = "none";
+                defenseOptions.style.display = "none";
+                leakOptions.style.display = "block";
+                document.getElementById("dictionaryActionBtn").classList.remove("active");
+                document.getElementById("rainbowActionBtn").classList.remove("active");
+                document.getElementById("accountLockBtn").classList.remove("active");
+                document.getElementById("slowHashBtn").classList.remove("active");
+
+            }
+            else if (mode === "attack") {
+                attackBtn.classList.add("active");
+                attackOptions.style.display = "block";
+                defenseOptions.style.display = "none";
+                leakOptions.style.display = "none";
+                document.getElementById("leakActionBtn").classList.remove("active");
+                document.getElementById("accountLockBtn").classList.remove("active");
+                document.getElementById("slowHashBtn").classList.remove("active");
+            }
+            else {
+                defenseBtn.classList.add("active");
+                attackOptions.style.display = "none";
+                defenseOptions.style.display = "block";
+                leakOptions.style.display = "none";
+                document.getElementById("leakActionBtn").classList.remove("active");
+                document.getElementById("dictionaryActionBtn").classList.remove("active");
+                document.getElementById("rainbowActionBtn").classList.remove("active");
+            }
+        }
+
+        function addUser() {
+            const usernameInput = document.getElementById("username");
+            const passwordInput = document.getElementById("password");
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (username === "" || password === "") {
+                showMessage("⚠ Please fill all fields!");
+                return;
+            }
+
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+                .then(() => {
+                    showMessage("✅ User added successfully!");
+
+                    usernameInput.value = "";
+                    passwordInput.value = "";
+                });
+        }
+
+        function leakPasswords() {
+            document.getElementById("leakActionBtn").classList.add("active");
+            fetch('/leak')
+                .then(res => res.json())
+                .then(data => {
+                    let output = "Leaked \n\n";
+
+                    data.forEach(u => {
+                        output += 'Username: ' + u.username + '\n';
+                        output += 'Plain: ' + u.plain + '\n';
+                        output += 'Hash: ' + u.hash + ' \n';
+                        output += 'Salt+Hash: ' + u.salt_hash + '\n\n';
+                    });
+
+                    typeWriter(output);
+                });
+        }
+
+        function dictionaryAttack() {
+            document.getElementById("dictionaryActionBtn").classList.add("active");
+            document.getElementById("rainbowActionBtn").classList.remove("active");
+
+            fetch('/attack/dictionary')
+                .then(res => res.json())
+                .then(data => {
+
+                    updateListSample("Dictionary Wordlist", data.wordlist);
+
+                    let output = "Dictionary Attack Results\n\n";
+
+                    data.results.forEach(i => {
+                        output += `Hash("${i.word}")\n`;
+
+                        if (i.match.length) {
+                            output += `Match: ${i.match.length} accounts\n`;
+                            output += `Username: ${i.match.join(", ")}\n\n`;
+                        } else {
+                            output += "Match: none\n\n";
+                        }
+                    });
+
+                    typeWriter(output);
+                });
+        }
+
+        function rainbowAttack() {
+            document.getElementById("rainbowActionBtn").classList.add("active");
+            document.getElementById("dictionaryActionBtn").classList.remove("active");
+
+            fetch('/attack/rainbow')
+                .then(res => res.json())
+                .then(data => {
+
+                    const tableList = Object.entries(data.table)
+                        .map(([hash, pass]) => `${pass} → ${hash}`);
+
+                    updateListSample("Rainbow Table", tableList);
+
+                    let output = "Rainbow Table Attack Results\n\n";
+
+                    data.results.forEach(i => {
+                        output += `Stolen hash: ${i.hash}\n`;
+                        output += `Match: ${i.count} accounts\n`;
+                        output += `Username: ${i.users.join(", ")}\n`;
+                        output += `Password: ${i.password}\n\n`;
+                    });
+
+                    typeWriter(output);
+                });
+        }
+
+        function accountLock() {
+            document.getElementById("accountLockBtn").classList.add("active");
+            document.getElementById("slowHashBtn").classList.remove("active");
+
+            fetch('/defense/lock')
+                .then(res => res.json())
+                .then(data => {
+
+                    updateListSample("Login Attempts", data.attempts);
+
+                    typeWriter(data.output);
+                });
+        }
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function slowHash() {
+
+            const output = document.getElementById("output");
+            output.innerText = "";
+            updateListSample("Slow Hash Wordlist", []);
+
+            showLoading();
+
+            const res = await fetch('/defense/slow');
+            const data = await res.json();
+
+            hideLoading();
+            updateListSample("Slow Hash Wordlist", data.wordlist);
+
+            for (let i of data.results) {
+
+                output.innerText += `User: ${i.username}\n`;
+                output.innerText += `Password: ${i.password}\n`;
+                output.innerText += `Hash Time: ${i.time}s\n`;
+
+                if (i.match) {
+                    output.innerText += "Result: MATCH FOUND\n\n";
+                    break;
+                } else {
+                    output.innerText += "Result: Incorrect\nWaiting...\n\n";
+                }
+
+                showLoading();
+                await sleep(i.time * 1000);
+                hideLoading();
+            }
+
+            output.innerText += `TOTAL TIME: ${data.total_time}s`;
+        }
+
+    </script>
+
+</body>
+
+</html>
