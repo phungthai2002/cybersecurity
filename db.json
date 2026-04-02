@@ -12,18 +12,5 @@
         "hash": "65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5",
         "salt": "b681dff8fe899b02",
         "salt_hash": "1365c153b9bc381b2614286b69494f4c4c7823e4fbe2860ffa04aa385f4eb6d7"
-    },
-    {
-        "username": "Marc",
-        "plain": "password123",
-        "hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-        "salt": "71f7cdcbb2c76031",
-        "salt_hash": "e25892a7886cf4c022a0f1d044caf28494836bb9bbc9f081886559d6973fdc95"
-    },
-    {
-        "username": "ad",
-        "plain": "affff",
-        "hash": "b81493e01bed4adee3c569b9ff3c965e4ca7901a2e02d925e97693a8a8f22abf",
-        "salt_hash": "9a4a1ee239468fb2765bdab92c6885bf0b50bb172286223862b8b6bc82e38668"
     }
 ]

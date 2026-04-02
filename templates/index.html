@@ -11,7 +11,8 @@
     <div class="container">
 
         <div class="left-panel">
-            <a href="/" style="color: #51d400;text-decoration: none;font-size: 20px; pointer-events: none;">Simulate:</a>
+            <a href="/"
+                style="color: #51d400;text-decoration: none;font-size: 20px; pointer-events: none;">Simulate:</a>
             <button onclick="setMode('leak')" id="leakBtn" class="active">LEAK</button>
             <button onclick="setMode('attack')" id="attackBtn">ATTACK</button>
             <button onclick="setMode('defense')" id="defenseBtn">DEFENSE</button>
@@ -52,7 +53,7 @@
             </div>
             <div id="output" class="output-box"></div>
             <h2 style="margin-left: 10px;">List Sample</h2>
-            <div id="listSample" class="output-box"></div>
+            <div id="listSample" class="output-box" style="height: 150px;"></div>
         </div>
 
     </div>
@@ -187,6 +188,7 @@
 
         function leakPasswords() {
             document.getElementById("leakActionBtn").classList.add("active");
+            updateListSample("", []);
             fetch('/leak')
                 .then(res => res.json())
                 .then(data => {
@@ -216,7 +218,9 @@
                     let output = "Dictionary Attack Results\n\n";
 
                     data.results.forEach(i => {
-                        output += `Hash("${i.word}")\n`;
+                        output += `Candidate Password: ${i.word}\n`;
+                        output += `Compute Hash: Hash("${i.word}")\n`;
+                        output += `Comparing with database.....\n`;
 
                         if (i.match.length) {
                             output += `Match: ${i.match.length} accounts\n`;
@@ -246,10 +250,16 @@
                     let output = "Rainbow Table Attack Results\n\n";
 
                     data.results.forEach(i => {
+
                         output += `Stolen hash: ${i.hash}\n`;
-                        output += `Match: ${i.count} accounts\n`;
-                        output += `Username: ${i.users.join(", ")}\n`;
-                        output += `Password: ${i.password}\n\n`;
+
+                        if (i.count > 0) {
+                            output += `Match: ${i.count} accounts\n`;
+                            output += `Username: ${i.users.join(", ")}\n`;
+                            output += `Password: ${i.password}\n\n`;
+                        } else {
+                            output += "Match: None\n\n";
+                        }
                     });
 
                     typeWriter(output);
@@ -290,7 +300,7 @@
             for (let i of data.results) {
 
                 output.innerText += `User: ${i.username}\n`;
-                output.innerText += `Password: ${i.password}\n`;
+                output.innerText += `Candidate Password: ${i.password}\n`;
                 output.innerText += `Hash Time: ${i.time}s\n`;
 
                 if (i.match) {

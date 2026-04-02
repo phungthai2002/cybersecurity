@@ -61,7 +61,7 @@ def leak():
 @app.route("/attack/dictionary")
 def dictionary():
     db = load_db()
-    words = ["123456", "password", "hello123", "qwerty","99767634"]
+    words = ["123456", "password", "hello123", "qwerty"]
 
     result = []
 
@@ -79,6 +79,7 @@ def dictionary():
 def rainbow():
     db = load_db()
 
+    # rainbow table
     table = {
         sha256("123456"): "123456",
         sha256("password"): "password",
@@ -86,40 +87,31 @@ def rainbow():
         sha256("qwerty"): "qwerty"
     }
 
-    result = []
+    grouped = {}
 
     for u in db:
-        if u["hash"] in table:
-            result.append(
-                {
-                    "hash": u["hash"],
-                    "users": [u["username"]],
-                    "password": table[u["hash"]],
-                    "count": 1
-                }
-            )
+        h = u["hash"]
 
-    return {"results": result, "table": table}
+        if h in table:
+            if h not in grouped:
+                grouped[h] = []
 
+            grouped[h].append(u["username"])
 
-# -------- DEFENSE LOCK --------
-# @app.route("/defense/lock")
-# def lock():
-#     output = ""
+    result = []
 
-#     attempts = ["123456","password","hello123"]
-#     account = "Alice"
-#     for i, p in enumerate(attempts):
-#         output += f"Attempt {i+1}:\n"
-#         output += f"user: {account}\n"
-#         output += f"Password: {p}\n"
-#         output += "Result: Incorrect password\n"
-#         output += f"Remaining Attempts: {2-i}\n\n"
+    for h, users in grouped.items():
+        result.append({
+            "hash": h,
+            "users": users,
+            "password": table[h],
+            "count": len(users)
+        })
 
-#     output += "ACCOUNT LOCKED\nToo many failed attempts."
-
-
-#     return output
+    return {
+        "results": result,
+        "table": table
+    }
 @app.route("/defense/lock")
 def lock():
     db = load_db()
